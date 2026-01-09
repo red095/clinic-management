@@ -28,7 +28,7 @@ class Appointment(models.Model):
     )
     doctor = models.ForeignKey(
         settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
+            on_delete=models.CASCADE,
         related_name='doctor_appointments',
         limit_choices_to={'role': 'doctor'}
     )
