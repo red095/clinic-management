@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div style="text-align: center; margin-top: 50px;">
+    <h2>Welcome to the Clinic Management System</h2>
+    <p>Please login to access your dashboard.</p>
+    <a href="{% url 'login' %}"
+        style="display: inline-block; margin-top: 20px; padding: 10px 20px; background-color: var(--primary-color); color: white; border-radius: 5px;">Login</a>
+    <a href="{% url 'register' %}"
+        style="display: inline-block; margin-top: 20px; margin-left: 10px; padding: 10px 20px; background-color: var(--secondary-color); color: white; border-radius: 5px;">Register</a>
+</div>
+{% endblock %}

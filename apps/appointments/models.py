@@ -106,3 +106,10 @@ class Appointment(models.Model):
 
     def is_editable(self):
         return self.status in [self.STATUS_PENDING, self.STATUS_CONFIRMED]
+
+    def is_accessible_by(self, user):
+        if user == self.patient or user == self.doctor:
+            return True
+        if user.role == 'admin':
+            return True
+        return False

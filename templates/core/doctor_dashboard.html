@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <h2>Doctor Dashboard</h2>
+    <p>Welcome Dr. {{ user.last_name }}.</p>
+    <div style="margin-top: 20px;">
+        <!-- Placeholder for future functionality -->
+        <p>Your schedule will appear here.</p>
+    </div>
+    <form method="post" action="{% url 'logout' %}" style="margin-top: 50px;">
+        {% csrf_token %}
+        <button type="submit" style="width: auto; background-color: #d90429;">Logout</button>
+    </form>
+</div>
+{% endblock %}

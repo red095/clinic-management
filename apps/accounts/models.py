@@ -24,6 +24,11 @@ class User(AbstractUser):
         ('admin', 'Admin')
     )
 
+    GENDER_CHOICES = (
+        ('Male', 'Male'),
+        ('Female', 'Female'),
+    )
+
     email = models.EmailField(unique=True)
     first_name = models.CharField(max_length=30)
     last_name = models.CharField(max_length=30)
@@ -37,7 +42,7 @@ class User(AbstractUser):
     date_of_birth = models.DateField(blank=True, null=True)
     phone_number = models.CharField(max_length=15, blank=True, null=True)
     address = models.CharField(max_length=100, blank=True, null=True)
-    gender = models.CharField(max_length=10, blank=True, null=True)
+    gender = models.CharField(max_length=10, choices=GENDER_CHOICES, blank=True, null=True)
     
     objects = CustomUserManager()
     
@@ -57,4 +62,16 @@ class User(AbstractUser):
             
         if self.role == 'patient' and not self.phone_number:
             raise ValidationError({'phone_number': 'Patients must have a phone number.'})
+
+    @property
+    def is_doctor(self):
+        return self.role == 'doctor'
+
+    @property
+    def is_patient(self):
+        return self.role == 'patient'
+
+    @property
+    def is_admin(self):
+        return self.role == 'admin'
     

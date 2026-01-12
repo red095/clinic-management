@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+
+{% block title %}Register - Clinic Management{% endblock %}
+
+{% block content %}
+<div class="auth-container" style="max-width: 500px;">
+    <h2>Patient Registration</h2>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Register</button>
+    </form>
+    <p style="text-align: center; margin-top: 15px;">
+        Already have an account? <a href="{% url 'login' %}">Login here</a>.
+    </p>
+</div>
+{% endblock %}
