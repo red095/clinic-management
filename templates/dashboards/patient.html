@@ -26,7 +26,9 @@
                 <tr>
                     <td style="padding: 10px; border: 1px solid #ddd;">{{ appt.scheduled_time }}</td>
                     <td style="padding: 10px; border: 1px solid #ddd;">Dr. {{ appt.doctor.last_name }}</td>
-                    <td style="padding: 10px; border: 1px solid #ddd;">{{ appt.get_status_display }}</td>
+                    <td style="padding: 10px; border: 1px solid #ddd;">
+                        <span class="badge badge-{{ appt.status|lower }}">{{ appt.get_status_display }}</span>
+                    </td>
                 </tr>
                 {% endfor %}
             </tbody>

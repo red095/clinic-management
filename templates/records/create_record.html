@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+
+{% block title %}Create Medical Record - Clinic Management{% endblock %}
+
+{% block content %}
+<div class="auth-container" style="max-width: 800px;">
+    <h2>Create Medical Record</h2>
+    <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
+        <p><strong>Patient:</strong> {{ appointment.patient.first_name }} {{ appointment.patient.last_name }}</p>
+        <p><strong>Appointment Date:</strong> {{ appointment.scheduled_time }}</p>
+    </div>
+
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <div style="margin-top: 20px;">
+            <button type="submit">save Record</button>
+        </div>
+    </form>
+    <p style="text-align: center; margin-top: 15px;">
+        <a href="{% url 'doctor_dashboard' %}">Cancel</a>
+    </p>
+</div>
+{% endblock %}

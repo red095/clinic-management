@@ -1,27 +1,49 @@
 <!DOCTYPE html>
-{% load static %}
 <html lang="en">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Clinic Management{% endblock %}</title>
-    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
 </head>
 
 <body>
     <header>
-        <div class="container">
-            <h1>Clinic Management System</h1>
+        <div class="container header-content">
+            <h1><a href="{% url 'home' %}" style="color: white; text-decoration: none;">Clinic Management</a></h1>
+            <nav>
+                <ul class="nav-links">
+                    {% if user.is_authenticated %}
+                    {% if user.role == 'patient' %}
+                    <li><a href="{% url 'patient_dashboard' %}">Dashboard</a></li>
+                    <li><a href="{% url 'book_appointment' %}">Book Appointment</a></li>
+                    {% elif user.role == 'doctor' %}
+                    <li><a href="{% url 'doctor_dashboard' %}">Dashboard</a></li>
+                    {% endif %}
+                    <li>
+                        <form action="{% url 'logout' %}" method="post" style="display:inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="btn-link">Logout</button>
+                        </form>
+                    </li>
+                    {% else %}
+                    <li><a href="{% url 'login' %}">Login</a></li>
+                    <li><a href="{% url 'register' %}">Register</a></li>
+                    {% endif %}
+                </ul>
+            </nav>
         </div>
     </header>
 
     <main class="container">
-        {% block content %}{% endblock %}
+        {% block content %}
+        {% endblock %}
     </main>
 
     <footer>
-        <div class="container" style="text-align: center; padding: 20px; margin-top: 50px; color: #777;">
+        <div class="container footer-content">
             &copy; 2026 Clinic Management. All rights reserved.
         </div>
     </footer>

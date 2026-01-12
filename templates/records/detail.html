@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+
+{% block title %}Medical Record Details - Clinic Management{% endblock %}
+
+{% block content %}
+<div class="auth-container" style="max-width: 800px;">
+    <h2>Medical Record</h2>
+    <div style="background-color: #f8f9fa; padding: 20px; border-radius: 5px; margin-bottom: 20px;">
+        <div style="margin-bottom: 15px;">
+            <strong>Date:</strong> {{ record.created_at|date:"F d, Y" }}
+        </div>
+        <div style="margin-bottom: 15px;">
+            <strong>Doctor:</strong> Dr. {{ record.doctor.last_name }}
+        </div>
+        <div style="margin-bottom: 15px;">
+            <strong>Diagnosis:</strong>
+            <p style="background: white; padding: 10px; border: 1px solid #ddd; border-radius: 4px; margin-top: 5px;">{{ record.diagnosis|linebreaks }}</p>
+        </div>
+        <div>
+            <strong>Notes:</strong>
+            <p style="background: white; padding: 10px; border: 1px solid #ddd; border-radius: 4px; margin-top: 5px;">{{ record.notes|linebreaks }}</p>
+        </div>
+    </div>
+    
+    <div style="text-align: center; margin-top: 20px;">
+        {% if user.is_patient %}
+        <a href="{% url 'patient_dashboard' %}" class="btn" style="background-color: #6c757d; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Back to Dashboard</a>
+        {% elif user.is_doctor %}
+        <a href="{% url 'doctor_dashboard' %}" class="btn" style="background-color: #6c757d; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Back to Dashboard</a>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
