@@ -4,3 +4,9 @@ venv
 
 config/__pycache__
 *.pyc
+
+__pycache__
+.idea
+.vscode
+.env
+.pytest_cache

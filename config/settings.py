@@ -122,7 +122,6 @@ LOGIN_URL = 'login'
 LOGOUT_REDIRECT_URL = 'login'
 
 # ── Email ──
-# Dev: prints to console. Prod: set EMAIL_BACKEND to smtp in .env
 EMAIL_BACKEND = os.getenv('EMAIL_BACKEND', 'django.core.mail.backends.console.EmailBackend')
 EMAIL_HOST = os.getenv('EMAIL_HOST', 'smtp.gmail.com')
 EMAIL_PORT = int(os.getenv('EMAIL_PORT', '587'))

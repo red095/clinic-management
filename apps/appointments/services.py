@@ -25,13 +25,6 @@ def book_appointment(patient, doctor, scheduled_time, reason_for_visit):
         raise ValidationError({'scheduled_time': 'Appointments must be within the next 90 days.'})
 
     # 3. Double Booking Check (Only for CONFIRMED appointments)
-    # The requirement says "Prevent double booking" in general, but the model logic specifically 
-    # checked for overlapping CONFIRMED appointments. 
-    # However, for a *new* booking which starts as PENDING, we might want to check if there's already 
-    # a confirmed appointment at that slot to avoid even creating a pending one that can't be confirmed.
-    # Let's strictly follow the model's `clean` logic which checks strictly against CONFIRMED.
-    # Since a new appointment is PENDING, it technically doesn't conflict yet unless we auto-confirm (which we don't).
-    # But for better UX, we should probably warn or block if the slot is taken by a CONFIRMED appointment.
     
     overlapping = Appointment.objects.filter(
         doctor=doctor,
