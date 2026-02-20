@@ -62,3 +62,32 @@ class DoctorDashboardView(DoctorRequiredMixin, TemplateView):
         ).order_by('-scheduled_time')[:10] # Limit to recent 10
 
         return context
+
+class AdminDashboardView(AdminRequiredMixin, TemplateView):
+    template_name = 'dashboards/admin.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        today = timezone.now().date()
+
+        from apps.appointments.models import Appointment as Appt
+        context['appointments_today'] = Appt.objects.filter(
+            scheduled_time__date=today
+        ).count()
+        context['total_appointments'] = Appt.objects.count()
+        context['total_patients'] = User.objects.filter(role='patient').count()
+        context['total_doctors'] = User.objects.filter(role='doctor').count()
+        context['doctors'] = User.objects.filter(role='doctor').order_by('last_name')
+
+        context['doctor_workload'] = Appt.objects.filter(
+            status=Appt.STATUS_CONFIRMED
+        ).values(
+            doctor_name=F('doctor__email')
+        ).annotate(
+            count=Count('id')
+        ).order_by('-count')[:5]
+
+        context['status_breakdown'] = Appt.objects.values('status').annotate(count=Count('id'))
+
+        return context
+

@@ -1,79 +1,560 @@
 {% extends 'base.html' %}
+{% block title %}Patient Dashboard | Clinic Management{% endblock %}
 
 {% block content %}
-<div class="container">
-    <div style="display: flex; justify-content: space-between; align-items: center;">
-        <h2>Patient Dashboard</h2>
-        <a href="{% url 'book_appointment' %}"
-            style="background-color: var(--primary-color); color: white; padding: 10px 20px; border-radius: 5px; text-decoration: none;">Book
-            Appointment</a>
-    </div>
-    <p>Welcome, {{ user.first_name }}!</p>
+<style>
+    :root {
+        --sidebar-bg: #0f172a;
+        --accent: #3b82f6;
+        --accent2: #6366f1;
+        --surface: #f1f5f9;
+        --card-bg: #ffffff;
+        --text: #0f172a;
+        --muted: #64748b;
+        --border: #e2e8f0;
+    }
 
-    <div style="margin-top: 30px;">
-        <h3>Upcoming Appointments</h3>
-        {% if upcoming_appointments %}
-        <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
-            <thead>
-                <tr style="background-color: #f2f2f2; text-align: left;">
-                    <th style="padding: 10px; border: 1px solid #ddd;">Date & Time</th>
-                    <th style="padding: 10px; border: 1px solid #ddd;">Doctor</th>
-                    <th style="padding: 10px; border: 1px solid #ddd;">Status</th>
-                </tr>
-            </thead>
-            <tbody>
+    .dash-layout {
+        display: flex;
+        min-height: calc(100vh - 70px);
+        background: var(--surface);
+    }
+
+    /* ── Sidebar ── */
+    .sidebar {
+        width: 230px;
+        background: var(--sidebar-bg);
+        padding: 28px 0;
+        flex-shrink: 0;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .sidebar-profile {
+        text-align: center;
+        padding: 0 20px 24px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        margin-bottom: 20px;
+    }
+
+    .avatar-circle {
+        width: 62px;
+        height: 62px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--accent), var(--accent2));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #fff;
+        margin: 0 auto 10px;
+    }
+
+    .sidebar-name {
+        color: #f1f5f9;
+        font-weight: 600;
+        font-size: 0.92rem;
+    }
+
+    .sidebar-role {
+        color: #94a3b8;
+        font-size: 0.76rem;
+        margin-top: 2px;
+    }
+
+    .sidebar-nav {
+        flex: 1;
+    }
+
+    .nav-item {
+        display: flex;
+        align-items: center;
+        gap: 11px;
+        padding: 10px 22px;
+        color: #94a3b8;
+        font-size: 0.88rem;
+        text-decoration: none;
+        border-left: 3px solid transparent;
+        transition: all 0.2s;
+    }
+
+    .nav-item:hover,
+    .nav-item.active {
+        color: #f1f5f9;
+        background: rgba(59, 130, 246, 0.1);
+        border-left-color: var(--accent);
+    }
+
+    .nav-icon {
+        font-size: 1rem;
+        width: 18px;
+        text-align: center;
+    }
+
+    .sidebar-footer {
+        padding: 20px 22px 0;
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+        margin-top: 12px;
+    }
+
+    .btn-logout {
+        width: 100%;
+        padding: 9px;
+        background: rgba(239, 68, 68, 0.15);
+        border: 1px solid rgba(239, 68, 68, 0.3);
+        color: #fca5a5;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 0.85rem;
+        font-family: inherit;
+        transition: all 0.2s;
+    }
+
+    .btn-logout:hover {
+        background: rgba(239, 68, 68, 0.3);
+        color: #fff;
+    }
+
+    /* ── Main ── */
+    .dash-main {
+        flex: 1;
+        padding: 30px;
+        overflow-y: auto;
+    }
+
+    .dash-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 26px;
+    }
+
+    .dash-title {
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: var(--text);
+    }
+
+    .dash-subtitle {
+        color: var(--muted);
+        font-size: 0.88rem;
+        margin-top: 3px;
+    }
+
+    .btn-book {
+        display: inline-block;
+        padding: 10px 20px;
+        background: linear-gradient(135deg, var(--accent), var(--accent2));
+        color: #fff;
+        border-radius: 10px;
+        text-decoration: none;
+        font-size: 0.88rem;
+        font-weight: 600;
+        transition: opacity 0.2s, transform 0.15s;
+        white-space: nowrap;
+    }
+
+    .btn-book:hover {
+        opacity: 0.9;
+        transform: translateY(-1px);
+    }
+
+    /* ── Stat Cards ── */
+    .stats-row {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+        margin-bottom: 28px;
+    }
+
+    .stat-card {
+        background: var(--card-bg);
+        border-radius: 14px;
+        padding: 20px 22px;
+        border: 1px solid var(--border);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        display: flex;
+        align-items: center;
+        gap: 16px;
+    }
+
+    .stat-icon {
+        width: 46px;
+        height: 46px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.3rem;
+        flex-shrink: 0;
+    }
+
+    .icon-blue {
+        background: #eff6ff;
+    }
+
+    .icon-green {
+        background: #f0fdf4;
+    }
+
+    .icon-purple {
+        background: #f5f3ff;
+    }
+
+    .stat-num {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: var(--text);
+        line-height: 1;
+    }
+
+    .stat-lbl {
+        font-size: 0.78rem;
+        color: var(--muted);
+        margin-top: 3px;
+    }
+
+    /* ── Section ── */
+    .section {
+        margin-bottom: 26px;
+    }
+
+    .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 14px;
+    }
+
+    .section-title {
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: var(--text);
+    }
+
+    /* ── Appointment Cards ── */
+    .appt-list {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .appt-card {
+        background: var(--card-bg);
+        border-radius: 14px;
+        border: 1px solid var(--border);
+        padding: 16px 20px;
+        display: flex;
+        align-items: center;
+        gap: 18px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+        transition: box-shadow 0.2s, transform 0.15s;
+    }
+
+    .appt-card:hover {
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+        transform: translateY(-1px);
+    }
+
+    .appt-date-box {
+        width: 52px;
+        height: 52px;
+        flex-shrink: 0;
+        background: linear-gradient(135deg, var(--accent), var(--accent2));
+        border-radius: 12px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        line-height: 1;
+    }
+
+    .appt-date-day {
+        font-size: 1.2rem;
+        font-weight: 700;
+    }
+
+    .appt-date-mon {
+        font-size: 0.6rem;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+
+    .appt-info {
+        flex: 1;
+    }
+
+    .appt-doctor {
+        font-weight: 600;
+        color: var(--text);
+        font-size: 0.92rem;
+    }
+
+    .appt-time {
+        font-size: 0.8rem;
+        color: var(--muted);
+        margin-top: 3px;
+    }
+
+    .appt-reason {
+        font-size: 0.8rem;
+        color: var(--muted);
+        margin-top: 2px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 280px;
+    }
+
+    .badge {
+        display: inline-block;
+        padding: 3px 10px;
+        border-radius: 20px;
+        font-size: 0.72rem;
+        font-weight: 600;
+    }
+
+    .badge-pending {
+        background: #fef9c3;
+        color: #854d0e;
+    }
+
+    .badge-confirmed {
+        background: #d1fae5;
+        color: #065f46;
+    }
+
+    .badge-completed {
+        background: #dbeafe;
+        color: #1e40af;
+    }
+
+    .badge-cancelled {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+
+    /* ── Records ── */
+    .record-list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .record-card {
+        background: var(--card-bg);
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        padding: 14px 18px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        text-decoration: none;
+        transition: box-shadow 0.2s;
+    }
+
+    .record-card:hover {
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+    }
+
+    .record-icon {
+        width: 38px;
+        height: 38px;
+        background: #f0fdf4;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+        flex-shrink: 0;
+    }
+
+    .record-date {
+        font-size: 0.82rem;
+        font-weight: 600;
+        color: var(--text);
+    }
+
+    .record-doctor {
+        font-size: 0.78rem;
+        color: var(--muted);
+        margin-top: 2px;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 30px 20px;
+        color: var(--muted);
+        font-size: 0.9rem;
+        background: var(--card-bg);
+        border-radius: 14px;
+        border: 1px solid var(--border);
+    }
+
+    .empty-state .empty-icon {
+        font-size: 2rem;
+        margin-bottom: 8px;
+    }
+</style>
+
+<div class="dash-layout">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-profile">
+            <div class="avatar-circle">{{ user.first_name|slice:":1"|upper }}</div>
+            <div class="sidebar-name">{{ user.first_name }} {{ user.last_name }}</div>
+            <div class="sidebar-role">Patient</div>
+        </div>
+
+        <nav class="sidebar-nav">
+            <a class="nav-item active" href="{% url 'patient_dashboard' %}">
+                <span class="nav-icon">&#9632;</span> Dashboard
+            </a>
+            <a class="nav-item" href="{% url 'book_appointment' %}">
+                <span class="nav-icon">+</span> Book Appointment
+            </a>
+        </nav>
+
+        <div class="sidebar-footer">
+            <form method="post" action="{% url 'logout' %}">
+                {% csrf_token %}
+                <button type="submit" class="btn-logout">Sign Out</button>
+            </form>
+        </div>
+    </aside>
+
+    <!-- Main -->
+    <main class="dash-main">
+        <div class="dash-top">
+            <div>
+                <div class="dash-title">Welcome back, {{ user.first_name }}!</div>
+                <div class="dash-subtitle">Here is your health summary for today.</div>
+            </div>
+            <a href="{% url 'book_appointment' %}" class="btn-book">+ Book Appointment</a>
+        </div>
+
+        <!-- Stat Cards -->
+        <div class="stats-row">
+            <div class="stat-card">
+                <div class="stat-icon icon-blue">&#128197;</div>
+                <div>
+                    <div class="stat-num">{{ upcoming_appointments|length }}</div>
+                    <div class="stat-lbl">Upcoming Appointments</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon icon-green">&#128203;</div>
+                <div>
+                    <div class="stat-num">{{ medical_records|length }}</div>
+                    <div class="stat-lbl">Medical Records</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon icon-purple">&#10003;</div>
+                <div>
+                    <div class="stat-num">{{ past_appointments|length }}</div>
+                    <div class="stat-lbl">Past Visits</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Upcoming Appointments -->
+        <div class="section">
+            <div class="section-header">
+                <div class="section-title">Upcoming Appointments</div>
+                <a href="{% url 'book_appointment' %}" class="btn-book" style="font-size:0.78rem; padding: 7px 14px;">+
+                    New</a>
+            </div>
+
+            {% if upcoming_appointments %}
+            <div class="appt-list">
                 {% for appt in upcoming_appointments %}
-                <tr>
-                    <td style="padding: 10px; border: 1px solid #ddd;">{{ appt.scheduled_time }}</td>
-                    <td style="padding: 10px; border: 1px solid #ddd;">Dr. {{ appt.doctor.last_name }}</td>
-                    <td style="padding: 10px; border: 1px solid #ddd;">
-                        <span class="badge badge-{{ appt.status|lower }}">{{ appt.get_status_display }}</span>
-                    </td>
-                </tr>
+                <div class="appt-card">
+                    <div class="appt-date-box">
+                        <div class="appt-date-day">{{ appt.scheduled_time|date:"d" }}</div>
+                        <div class="appt-date-mon">{{ appt.scheduled_time|date:"M" }}</div>
+                    </div>
+                    <div class="appt-info">
+                        <div class="appt-doctor">Dr. {{ appt.doctor.first_name }} {{ appt.doctor.last_name }}</div>
+                        <div class="appt-time">{{ appt.scheduled_time|date:"H:i" }} &mdash; {{
+                            appt.doctor.speciality|default:"General" }}</div>
+                        {% if appt.reason_for_visit %}
+                        <div class="appt-reason">{{ appt.reason_for_visit }}</div>
+                        {% endif %}
+                    </div>
+                    <span class="badge badge-{{ appt.status }}">{{ appt.get_status_display }}</span>
+                </div>
                 {% endfor %}
-            </tbody>
-        </table>
-        {% else %}
-        <p>No upcoming appointments.</p>
-        {% endif %}
-    </div>
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <div class="empty-icon">&#128197;</div>
+                No upcoming appointments.<br>
+                <a href="{% url 'book_appointment' %}"
+                    style="color: var(--accent); font-weight:600; text-decoration:none;">Book one now &rarr;</a>
+            </div>
+            {% endif %}
+        </div>
 
-    <div style="margin-top: 30px;">
-        <h3>Medical Records</h3>
-        {% if medical_records %}
-        <ul style="list-style: none; padding: 0;">
-            {% for record in medical_records %}
-            <li style="padding: 10px; border-bottom: 1px solid #eee;">
-                <a href="{% url 'record_detail' record.pk %}"
-                    style="text-decoration: none; color: #007bff; font-weight: bold;">
-                    {{ record.created_at|date:"Y-m-d" }} - Dr. {{ record.doctor.last_name }}
+        <!-- Medical Records -->
+        <div class="section">
+            <div class="section-header">
+                <div class="section-title">Medical Records</div>
+            </div>
+            {% if medical_records %}
+            <div class="record-list">
+                {% for record in medical_records %}
+                <a href="{% url 'record_detail' record.pk %}" class="record-card">
+                    <div class="record-icon">&#128203;</div>
+                    <div>
+                        <div class="record-date">{{ record.created_at|date:"F d, Y" }}</div>
+                        <div class="record-doctor">Dr. {{ record.doctor.first_name }} {{ record.doctor.last_name }}
+                        </div>
+                    </div>
+                    <span style="margin-left:auto; color: var(--accent); font-size: 1rem;">&rsaquo;</span>
                 </a>
-            </li>
-            {% endfor %}
-        </ul>
-        {% else %}
-        <p>No medical records found.</p>
-        {% endif %}
-    </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <div class="empty-icon">&#128203;</div>
+                No medical records yet.
+            </div>
+            {% endif %}
+        </div>
 
-    <div style="margin-top: 30px;">
-        <h3>Past Appointments</h3>
-        {% if past_appointments %}
-        <ul style="list-style: none; padding: 0;">
-            {% for appt in past_appointments %}
-            <li style="padding: 10px; border-bottom: 1px solid #eee;">
-                {{ appt.scheduled_time|date:"Y-m-d" }} with Dr. {{ appt.doctor.last_name }} - {{ appt.get_status_display
-                }}
-            </li>
-            {% endfor %}
-        </ul>
-        {% else %}
-        <p>No past appointments.</p>
-        {% endif %}
-    </div>
-    <form method="post" action="{% url 'logout' %}" style="margin-top: 50px;">
-        {% csrf_token %}
-        <button type="submit" style="width: auto; background-color: #d90429;">Logout</button>
-    </form>
+        <!-- Past Appointments -->
+        <div class="section">
+            <div class="section-header">
+                <div class="section-title">Past Appointments</div>
+            </div>
+            {% if past_appointments %}
+            <div class="appt-list">
+                {% for appt in past_appointments %}
+                <div class="appt-card" style="opacity: 0.8;">
+                    <div class="appt-date-box" style="background: #94a3b8;">
+                        <div class="appt-date-day">{{ appt.scheduled_time|date:"d" }}</div>
+                        <div class="appt-date-mon">{{ appt.scheduled_time|date:"M" }}</div>
+                    </div>
+                    <div class="appt-info">
+                        <div class="appt-doctor">Dr. {{ appt.doctor.first_name }} {{ appt.doctor.last_name }}</div>
+                        <div class="appt-time">{{ appt.scheduled_time|date:"H:i, N j, Y" }}</div>
+                    </div>
+                    <span class="badge badge-{{ appt.status }}">{{ appt.get_status_display }}</span>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <div class="empty-icon">&#9989;</div>
+                No past appointments.
+            </div>
+            {% endif %}
+        </div>
+
+    </main>
 </div>
 {% endblock %}

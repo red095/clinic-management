@@ -1,5 +1,6 @@
 from django.views.generic import CreateView
 from django.urls import reverse_lazy
+from django.core.exceptions import ValidationError
 from apps.core.mixins import PatientRequiredMixin
 from .models import Appointment
 from .forms import AppointmentBookingForm
@@ -14,6 +15,11 @@ class BookAppointmentView(PatientRequiredMixin, CreateView):
         kwargs = super().get_form_kwargs()
         kwargs['user'] = self.request.user
         return kwargs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['doctors_json'] = self.get_form().doctors_json
+        return context
 
     def form_valid(self, form):
         # Use service to book appointment

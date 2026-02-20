@@ -43,6 +43,7 @@ class User(AbstractUser):
     phone_number = models.CharField(max_length=15, blank=True, null=True)
     address = models.CharField(max_length=100, blank=True, null=True)
     gender = models.CharField(max_length=10, choices=GENDER_CHOICES, blank=True, null=True)
+    must_reset_password = models.BooleanField(default=False)
     
     objects = CustomUserManager()
     

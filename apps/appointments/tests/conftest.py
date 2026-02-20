@@ -5,27 +5,9 @@ from django.contrib.auth import get_user_model
 from django.utils import timezone
 from datetime import timedelta
 from apps.appointments.models import Appointment
+from apps.accounts.tests.factories import UserFactory
 
-User = get_user_model()
 
-class UserFactory(factory.django.DjangoModelFactory):
-    class Meta:
-        model = User
-    
-    username = factory.Sequence(lambda n: f'user{n}')
-    email = factory.Sequence(lambda n: f'user{n}@example.com')
-
-@pytest.fixture
-def patient_user(db):
-    return UserFactory(role='patient')
-
-@pytest.fixture
-def doctor_user(db):
-    return UserFactory(role='doctor')
-
-@pytest.fixture
-def another_doctor_user(db):
-    return UserFactory(role='doctor')
 
 @pytest.fixture
 def future_date():

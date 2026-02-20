@@ -27,7 +27,7 @@ class AnalyticsOverviewView(APIView):
         doctor_workload = Appointment.objects.filter(
             status=Appointment.STATUS_CONFIRMED
         ).values(
-            doctor_name=F('doctor__username')
+            doctor_name=F('doctor__email')
         ).annotate(
             count=Count('id')
         ).order_by('-count')[:5]

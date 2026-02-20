@@ -1,19 +1,580 @@
 {% extends 'base.html' %}
-
-{% block title %}Book Appointment - Clinic Management{% endblock %}
+{% block title %}Book Appointment | Clinic Management{% endblock %}
 
 {% block content %}
-<div class="auth-container" style="max-width: 600px;">
-    <h2>Book Appointment</h2>
-    <form method="post">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <div style="margin-top: 20px;">
-            <button type="submit">Book Appointment</button>
+<style>
+    .book-page {
+        min-height: calc(100vh - 70px);
+        background: linear-gradient(135deg, #f0f4ff 0%, #f8fafc 60%, #eff6ff 100%);
+        padding: 36px 16px;
+    }
+
+    .book-inner {
+        max-width: 720px;
+        margin: 0 auto;
+    }
+
+    .book-header {
+        margin-bottom: 24px;
+    }
+
+    .book-header h1 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #0f172a;
+    }
+
+    .book-header p {
+        color: #64748b;
+        font-size: 0.9rem;
+        margin-top: 4px;
+    }
+
+    /* Step indicator */
+    .steps {
+        display: flex;
+        align-items: center;
+        gap: 0;
+        margin-bottom: 28px;
+    }
+
+    .step {
+        flex: 1;
+        text-align: center;
+        position: relative;
+        font-size: 0.78rem;
+        font-weight: 600;
+        color: #94a3b8;
+    }
+
+    .step.active {
+        color: #3b82f6;
+    }
+
+    .step.done {
+        color: #10b981;
+    }
+
+    .step-num {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: #e2e8f0;
+        color: #64748b;
+        font-size: 0.82rem;
+        font-weight: 700;
+        margin-bottom: 4px;
+        border: 2px solid transparent;
+    }
+
+    .step.active .step-num {
+        background: #eff6ff;
+        border-color: #3b82f6;
+        color: #3b82f6;
+    }
+
+    .step.done .step-num {
+        background: #d1fae5;
+        border-color: #10b981;
+        color: #10b981;
+    }
+
+    .step-line {
+        height: 2px;
+        flex: 0 0 40px;
+        background: #e2e8f0;
+        margin-bottom: 20px;
+    }
+
+    .step-line.done {
+        background: #10b981;
+    }
+
+    /* Cards */
+    .card {
+        background: #fff;
+        border-radius: 18px;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+        padding: 28px;
+        margin-bottom: 20px;
+    }
+
+    .card-title {
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: #0f172a;
+        margin-bottom: 18px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    /* Speciality chips */
+    .spec-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+        gap: 10px;
+        margin-bottom: 4px;
+    }
+
+    .spec-chip {
+        padding: 10px 14px;
+        border: 1.5px solid #e2e8f0;
+        border-radius: 12px;
+        cursor: pointer;
+        text-align: center;
+        font-size: 0.82rem;
+        font-weight: 600;
+        color: #64748b;
+        background: #f8fafc;
+        transition: all 0.2s;
+        user-select: none;
+    }
+
+    .spec-chip:hover {
+        border-color: #3b82f6;
+        color: #3b82f6;
+        background: #eff6ff;
+    }
+
+    .spec-chip.active {
+        border-color: #3b82f6;
+        color: #3b82f6;
+        background: #eff6ff;
+    }
+
+    .spec-chip .chip-icon {
+        font-size: 1.4rem;
+        display: block;
+        margin-bottom: 4px;
+    }
+
+    /* Doctor cards */
+    .doctor-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+        gap: 12px;
+        min-height: 80px;
+    }
+
+    .doctor-option {
+        border: 1.5px solid #e2e8f0;
+        border-radius: 14px;
+        padding: 14px;
+        cursor: pointer;
+        background: #fff;
+        transition: all 0.2s;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .doctor-option:hover {
+        border-color: #3b82f6;
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.12);
+    }
+
+    .doctor-option.selected {
+        border-color: #3b82f6;
+        background: #eff6ff;
+    }
+
+    .doctor-option.hidden {
+        display: none;
+    }
+
+    .doc-avatar {
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #3b82f6, #6366f1);
+        color: #fff;
+        font-weight: 700;
+        font-size: 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 6px;
+    }
+
+    .doc-name {
+        font-size: 0.88rem;
+        font-weight: 700;
+        color: #0f172a;
+    }
+
+    .doc-spec {
+        font-size: 0.75rem;
+        color: #64748b;
+        margin-top: 2px;
+    }
+
+    .doc-check {
+        display: none;
+        width: 18px;
+        height: 18px;
+        background: #3b82f6;
+        border-radius: 50%;
+        color: #fff;
+        font-size: 0.6rem;
+        align-items: center;
+        justify-content: center;
+        margin-left: auto;
+        font-weight: 700;
+    }
+
+    .doctor-option.selected .doc-check {
+        display: flex;
+    }
+
+    .no-doctors {
+        text-align: center;
+        color: #94a3b8;
+        font-size: 0.88rem;
+        padding: 20px;
+    }
+
+    /* Hidden real select */
+    #id_doctor {
+        display: none;
+    }
+
+    /* Form fields */
+    .form-group {
+        margin-bottom: 18px;
+    }
+
+    .form-label {
+        display: block;
+        font-size: 0.83rem;
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 6px;
+    }
+
+    .form-input {
+        width: 100%;
+        padding: 11px 14px;
+        border: 1.5px solid #e2e8f0;
+        border-radius: 10px;
+        font-size: 0.93rem;
+        font-family: inherit;
+        outline: none;
+        box-sizing: border-box;
+        transition: border-color 0.2s, box-shadow 0.2s;
+        background: #fff;
+        color: #0f172a;
+    }
+
+    .form-input:focus {
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    .mismatch-box {
+        background: #fff7ed;
+        border: 1px solid #fdba74;
+        border-radius: 10px;
+        padding: 12px 16px;
+        margin-bottom: 16px;
+        font-size: 0.85rem;
+        color: #92400e;
+    }
+
+    .mismatch-box label {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        cursor: pointer;
+    }
+
+    .mismatch-box input[type=checkbox] {
+        margin-top: 2px;
+        flex-shrink: 0;
+    }
+
+    .error-box {
+        background: #fef2f2;
+        border: 1px solid #fecaca;
+        border-radius: 8px;
+        padding: 10px 14px;
+        color: #dc2626;
+        font-size: 0.85rem;
+        margin-bottom: 12px;
+    }
+
+    .form-actions {
+        display: flex;
+        gap: 12px;
+        margin-top: 8px;
+    }
+
+    .btn-submit {
+        flex: 1;
+        padding: 13px;
+        background: linear-gradient(135deg, #3b82f6, #6366f1);
+        color: #fff;
+        font-size: 0.95rem;
+        font-weight: 700;
+        border: none;
+        border-radius: 12px;
+        cursor: pointer;
+        font-family: inherit;
+        transition: opacity 0.2s, transform 0.15s;
+    }
+
+    .btn-submit:hover {
+        opacity: 0.9;
+        transform: translateY(-1px);
+    }
+
+    .btn-cancel {
+        padding: 13px 22px;
+        background: #f1f5f9;
+        color: #64748b;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        text-decoration: none;
+        font-family: inherit;
+        display: inline-flex;
+        align-items: center;
+        transition: background 0.2s;
+    }
+
+    .btn-cancel:hover {
+        background: #e2e8f0;
+    }
+
+    .non-field-errors {
+        background: #fef2f2;
+        border: 1px solid #fecaca;
+        border-radius: 10px;
+        padding: 12px 16px;
+        color: #dc2626;
+        font-size: 0.88rem;
+        margin-bottom: 16px;
+    }
+</style>
+
+<div class="book-page">
+    <div class="book-inner">
+
+        <div class="book-header">
+            <h1>Book an Appointment</h1>
+            <p>Find the right specialist and choose a time that works for you.</p>
         </div>
-    </form>
-    <p style="text-align: center; margin-top: 15px;">
-        <a href="{% url 'patient_dashboard' %}">Cancel</a>
-    </p>
+
+        <!-- Step Bar -->
+        <div class="steps">
+            <div class="step active" id="step-ind-1">
+                <div class="step-num">1</div><br>Speciality
+            </div>
+            <div class="step-line" id="line-1-2"></div>
+            <div class="step active" id="step-ind-2">
+                <div class="step-num">2</div><br>Doctor
+            </div>
+            <div class="step-line" id="line-2-3"></div>
+            <div class="step active" id="step-ind-3">
+                <div class="step-num">3</div><br>Date &amp; Time
+            </div>
+        </div>
+
+        {% if form.non_field_errors %}
+        <div class="non-field-errors">
+            {% for err in form.non_field_errors %}{{ err }}{% endfor %}
+        </div>
+        {% endif %}
+
+        <form method="post" id="booking-form">
+            {% csrf_token %}
+
+            <!-- Hidden real doctor select -->
+            {{ form.doctor }}
+
+            <!-- Step 1: Speciality filter -->
+            <div class="card">
+                <div class="card-title">Step 1 &mdash; Choose a Speciality</div>
+                <div class="spec-grid" id="spec-grid">
+                    <div class="spec-chip active" data-spec="all" onclick="filterSpec(this, 'all')">
+                        <span class="chip-icon">&#9729;</span>All Doctors
+                    </div>
+                    <div class="spec-chip" data-spec="cardio" onclick="filterSpec(this, 'cardio')">
+                        <span class="chip-icon">&#10084;</span>Cardiology
+                    </div>
+                    <div class="spec-chip" data-spec="neuro" onclick="filterSpec(this, 'neuro')">
+                        <span class="chip-icon">&#129504;</span>Neurology
+                    </div>
+                    <div class="spec-chip" data-spec="ortho" onclick="filterSpec(this, 'ortho')">
+                        <span class="chip-icon">&#129459;</span>Orthopedics
+                    </div>
+                    <div class="spec-chip" data-spec="dermat" onclick="filterSpec(this, 'dermat')">
+                        <span class="chip-icon">&#127774;</span>Dermatology
+                    </div>
+                    <div class="spec-chip" data-spec="ophthal" onclick="filterSpec(this, 'ophthal')">
+                        <span class="chip-icon">&#128065;</span>Eye (Ophthalmology)
+                    </div>
+                    <div class="spec-chip" data-spec="pediat" onclick="filterSpec(this, 'pediat')">
+                        <span class="chip-icon">&#128118;</span>Pediatrics
+                    </div>
+                    <div class="spec-chip" data-spec="gyneco" onclick="filterSpec(this, 'gyneco')">
+                        <span class="chip-icon">&#128149;</span>Gynecology
+                    </div>
+                    <div class="spec-chip" data-spec="gastro" onclick="filterSpec(this, 'gastro')">
+                        <span class="chip-icon">&#129704;</span>Gastroenterology
+                    </div>
+                    <div class="spec-chip" data-spec="pulmon" onclick="filterSpec(this, 'pulmon')">
+                        <span class="chip-icon">&#129455;</span>Pulmonology
+                    </div>
+                    <div class="spec-chip" data-spec="endocrin" onclick="filterSpec(this, 'endocrin')">
+                        <span class="chip-icon">&#9878;</span>Endocrinology
+                    </div>
+                    <div class="spec-chip" data-spec="general" onclick="filterSpec(this, 'general')">
+                        <span class="chip-icon">&#127973;</span>General
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 2: Pick a Doctor -->
+            <div class="card">
+                <div class="card-title">Step 2 &mdash; Pick a Doctor</div>
+                {% if form.doctor.errors %}
+                <div class="error-box">{% for e in form.doctor.errors %}{{ e }}{% endfor %}</div>
+                {% endif %}
+                <div class="doctor-grid" id="doctor-grid">
+                    <!-- Populated by JS -->
+                </div>
+                <div class="no-doctors" id="no-doctors" style="display:none;">
+                    No doctors found for this speciality.
+                </div>
+            </div>
+
+            <!-- Step 3: Date, Time & Reason -->
+            <div class="card">
+                <div class="card-title">Step 3 &mdash; Date, Time &amp; Reason</div>
+
+                <div class="form-group">
+                    <label class="form-label" for="{{ form.scheduled_time.id_for_label }}">Scheduled Date &amp;
+                        Time</label>
+                    <input type="datetime-local" name="scheduled_time" id="{{ form.scheduled_time.id_for_label }}"
+                        class="form-input" value="{{ form.scheduled_time.value|default:'' }}" required>
+                    {% if form.scheduled_time.errors %}
+                    <div class="error-box">{% for e in form.scheduled_time.errors %}{{ e }}{% endfor %}</div>
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="{{ form.reason_for_visit.id_for_label }}">Purpose / Reason for
+                        Visit</label>
+                    <textarea name="reason_for_visit" id="{{ form.reason_for_visit.id_for_label }}" class="form-input"
+                        rows="3"
+                        placeholder="Describe your symptoms or reason for the visit...">{{ form.reason_for_visit.value|default:'' }}</textarea>
+                    {% if form.reason_for_visit.errors %}
+                    <div class="error-box">{% for e in form.reason_for_visit.errors %}{{ e }}{% endfor %}</div>
+                    {% endif %}
+                </div>
+
+                {% if form.confirm_mismatch.errors %}
+                <div class="mismatch-box">
+                    <label>
+                        <input type="checkbox" name="confirm_mismatch" id="id_confirm_mismatch">
+                        {% for e in form.confirm_mismatch.errors %}{{ e }}{% endfor %}
+                    </label>
+                </div>
+                {% endif %}
+
+                <div class="form-actions">
+                    <a href="{% url 'patient_dashboard' %}" class="btn-cancel">&larr; Cancel</a>
+                    <button type="submit" class="btn-submit">Confirm Booking &rarr;</button>
+                </div>
+            </div>
+
+        </form>
+    </div>
 </div>
+
+<script>
+    var ALL_DOCTORS = {{ doctors_json| safe }};
+    var selectedDoctorId = null;
+
+    // Chip -> keyword map (match keys in speciality_keywords.py)
+    var CHIP_KEYS = {
+        'all': null,
+        'cardio': 'cardio',
+        'neuro': 'neuro',
+        'ortho': 'ortho',
+        'dermat': 'dermat',
+        'ophthal': 'ophthal',
+        'pediat': 'pediat',
+        'gyneco': 'gyneco',
+        'gastro': 'gastro',
+        'pulmon': 'pulmon',
+        'endocrin': 'endocrin',
+        'general': 'general',
+    };
+
+    function filterSpec(chip, key) {
+        // Deselect all chips
+        document.querySelectorAll('.spec-chip').forEach(function (c) { c.classList.remove('active'); });
+        chip.classList.add('active');
+
+        var filterKey = CHIP_KEYS[key];
+
+        // Filter doctors by speciality keyword
+        var filtered = filterKey
+            ? ALL_DOCTORS.filter(function (d) {
+                return d.speciality.toLowerCase().indexOf(filterKey) !== -1;
+            })
+            : ALL_DOCTORS;
+
+        renderDoctors(filtered);
+    }
+
+    function renderDoctors(list) {
+        var grid = document.getElementById('doctor-grid');
+        var noMsg = document.getElementById('no-doctors');
+        grid.innerHTML = '';
+
+        if (list.length === 0) {
+            noMsg.style.display = 'block';
+            return;
+        }
+        noMsg.style.display = 'none';
+
+        list.forEach(function (d) {
+            var initial = d.name.replace('Dr. ', '').charAt(0).toUpperCase();
+            var div = document.createElement('div');
+            div.className = 'doctor-option' + (selectedDoctorId == d.id ? ' selected' : '');
+            div.dataset.id = d.id;
+            div.innerHTML =
+                '<div style="display:flex;align-items:center;gap:8px;">' +
+                '<div class="doc-avatar">' + initial + '</div>' +
+                '<div class="doc-check">&#10003;</div>' +
+                '</div>' +
+                '<div class="doc-name">' + d.name + '</div>' +
+                '<div class="doc-spec">' + (d.speciality || 'General') + '</div>';
+
+            div.addEventListener('click', function () {
+                document.querySelectorAll('.doctor-option').forEach(function (el) { el.classList.remove('selected'); });
+                div.classList.add('selected');
+                selectedDoctorId = d.id;
+                document.getElementById('id_doctor').value = d.id;
+            });
+
+            grid.appendChild(div);
+        });
+    }
+
+    // Pre-select if form re-submitted with a doctor
+    var preselected = document.getElementById('id_doctor').value;
+    if (preselected) { selectedDoctorId = parseInt(preselected); }
+
+    // Initial render
+    renderDoctors(ALL_DOCTORS);
+</script>
 {% endblock %}

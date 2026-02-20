@@ -1,17 +1,333 @@
 {% extends 'base.html' %}
-
-{% block title %}Register - Clinic Management{% endblock %}
+{% block title %}Register | Clinic Management{% endblock %}
 
 {% block content %}
-<div class="auth-container" style="max-width: 500px;">
-    <h2>Patient Registration</h2>
-    <form method="post">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit">Register</button>
-    </form>
-    <p style="text-align: center; margin-top: 15px;">
-        Already have an account? <a href="{% url 'login' %}">Login here</a>.
-    </p>
+<style>
+    .auth-page {
+        min-height: calc(100vh - 70px);
+        background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 60%, #0f172a 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 40px 16px;
+    }
+
+    .auth-card {
+        background: #fff;
+        border-radius: 20px;
+        width: 100%;
+        max-width: 600px;
+        box-shadow: 0 25px 60px rgba(0, 0, 0, 0.3);
+        overflow: hidden;
+    }
+
+    .auth-card-header {
+        background: linear-gradient(135deg, #3b82f6, #6366f1);
+        padding: 28px 36px;
+        text-align: center;
+        color: #fff;
+    }
+
+    .auth-card-header h1 {
+        font-size: 1.4rem;
+        font-weight: 700;
+        margin: 0 0 4px;
+    }
+
+    .auth-card-header p {
+        font-size: 0.88rem;
+        opacity: 0.85;
+        margin: 0;
+    }
+
+    .auth-body {
+        padding: 28px 36px 32px;
+    }
+
+    .form-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+    }
+
+    .form-group.full {
+        grid-column: 1 / -1;
+    }
+
+    .form-label {
+        font-size: 0.82rem;
+        font-weight: 600;
+        color: #374151;
+    }
+
+    .input-wrap {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+
+    .form-input {
+        width: 100%;
+        padding: 10px 14px;
+        border: 1.5px solid #e2e8f0;
+        border-radius: 10px;
+        font-size: 0.93rem;
+        font-family: inherit;
+        outline: none;
+        transition: border-color 0.2s, box-shadow 0.2s;
+        box-sizing: border-box;
+        background: #fff;
+        color: #0f172a;
+    }
+
+    .form-input:focus {
+        border-color: #6366f1;
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
+    }
+
+    .form-input.has-toggle {
+        padding-right: 72px;
+    }
+
+    .toggle-pw {
+        position: absolute;
+        right: 10px;
+        background: #f1f5f9;
+        border: 1px solid #e2e8f0;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: #64748b;
+        padding: 3px 8px;
+        font-family: inherit;
+        transition: background 0.2s, color 0.2s;
+        user-select: none;
+    }
+
+    .toggle-pw:hover {
+        background: #e0e7ff;
+        color: #6366f1;
+    }
+
+    .pw-rules {
+        background: #eff6ff;
+        border: 1px solid #bfdbfe;
+        border-radius: 8px;
+        padding: 8px 12px;
+        font-size: 0.77rem;
+        color: #1e40af;
+        margin-top: 4px;
+        line-height: 1.6;
+    }
+
+    .error-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .error-list li {
+        font-size: 0.78rem;
+        color: #dc2626;
+        background: #fef2f2;
+        border: 1px solid #fecaca;
+        border-radius: 6px;
+        padding: 4px 10px;
+        margin-top: 4px;
+    }
+
+    .divider {
+        height: 1px;
+        background: #f1f5f9;
+        margin: 4px 0;
+    }
+
+    .btn-submit {
+        width: 100%;
+        padding: 13px;
+        background: linear-gradient(135deg, #3b82f6, #6366f1);
+        color: #fff;
+        font-size: 1rem;
+        font-weight: 700;
+        border: none;
+        border-radius: 12px;
+        cursor: pointer;
+        font-family: inherit;
+        transition: opacity 0.2s, transform 0.15s;
+        margin-top: 20px;
+    }
+
+    .btn-submit:hover {
+        opacity: 0.92;
+        transform: translateY(-1px);
+    }
+
+    .auth-footer {
+        text-align: center;
+        font-size: 0.88rem;
+        color: #64748b;
+        margin-top: 16px;
+    }
+
+    .auth-footer a {
+        color: #6366f1;
+        font-weight: 600;
+        text-decoration: none;
+    }
+
+    .auth-footer a:hover {
+        text-decoration: underline;
+    }
+
+    .non-field-errors {
+        background: #fef2f2;
+        border: 1px solid #fecaca;
+        border-radius: 10px;
+        padding: 10px 14px;
+        color: #dc2626;
+        font-size: 0.88rem;
+        margin-bottom: 16px;
+    }
+</style>
+
+<div class="auth-page">
+    <div class="auth-card">
+        <div class="auth-card-header">
+            <h1>Create Patient Account</h1>
+            <p>Join the clinic management system to book appointments.</p>
+        </div>
+
+        <div class="auth-body">
+            {% if form.non_field_errors %}
+            <div class="non-field-errors">
+                {% for error in form.non_field_errors %}{{ error }}{% endfor %}
+            </div>
+            {% endif %}
+
+            <form method="post">
+                {% csrf_token %}
+                <div class="form-grid">
+
+                    <div class="form-group">
+                        <label class="form-label" for="id_first_name">First Name *</label>
+                        <div class="input-wrap">
+                            <input type="text" name="first_name" id="id_first_name" class="form-input"
+                                value="{{ form.first_name.value|default:'' }}" placeholder="Jane" required>
+                        </div>
+                        {% for err in form.first_name.errors %}<ul class="error-list">
+                            <li>{{ err }}</li>
+                        </ul>{% endfor %}
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="id_last_name">Last Name *</label>
+                        <div class="input-wrap">
+                            <input type="text" name="last_name" id="id_last_name" class="form-input"
+                                value="{{ form.last_name.value|default:'' }}" placeholder="Doe" required>
+                        </div>
+                        {% for err in form.last_name.errors %}<ul class="error-list">
+                            <li>{{ err }}</li>
+                        </ul>{% endfor %}
+                    </div>
+
+                    <div class="form-group full">
+                        <label class="form-label" for="id_email">Email Address *</label>
+                        <div class="input-wrap">
+                            <input type="email" name="email" id="id_email" class="form-input"
+                                value="{{ form.email.value|default:'' }}" placeholder="jane@example.com" required>
+                        </div>
+                        {% for err in form.email.errors %}<ul class="error-list">
+                            <li>{{ err }}</li>
+                        </ul>{% endfor %}
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="id_phone_number">Phone Number</label>
+                        <input type="text" name="phone_number" id="id_phone_number" class="form-input"
+                            value="{{ form.phone_number.value|default:'' }}" placeholder="+251 912 345 678">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="id_date_of_birth">Date of Birth</label>
+                        <input type="date" name="date_of_birth" id="id_date_of_birth" class="form-input"
+                            value="{{ form.date_of_birth.value|default:'' }}">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="id_gender">Gender</label>
+                        <select name="gender" id="id_gender" class="form-input">
+                            <option value="">-- Select --</option>
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="id_address">Address</label>
+                        <input type="text" name="address" id="id_address" class="form-input"
+                            value="{{ form.address.value|default:'' }}" placeholder="Addis Ababa, Ethiopia">
+                    </div>
+
+                    <div class="divider" style="grid-column: 1/-1;"></div>
+
+                    <div class="form-group full">
+                        <label class="form-label" for="id_password1">Password *</label>
+                        <div class="input-wrap">
+                            <input type="password" name="password1" id="id_password1" class="form-input has-toggle"
+                                placeholder="At least 8 characters" required>
+                            <button type="button" class="toggle-pw"
+                                onclick="togglePw('id_password1', this)">Show</button>
+                        </div>
+                        <div class="pw-rules">
+                            Must be 8+ characters &middot; Cannot be too similar to personal info
+                            &middot; Cannot be a commonly used password &middot; Cannot be entirely numeric.
+                        </div>
+                        {% for err in form.password1.errors %}<ul class="error-list">
+                            <li>{{ err }}</li>
+                        </ul>{% endfor %}
+                    </div>
+
+                    <div class="form-group full">
+                        <label class="form-label" for="id_password2">Confirm Password *</label>
+                        <div class="input-wrap">
+                            <input type="password" name="password2" id="id_password2" class="form-input has-toggle"
+                                placeholder="Repeat your password" required>
+                            <button type="button" class="toggle-pw"
+                                onclick="togglePw('id_password2', this)">Show</button>
+                        </div>
+                        {% for err in form.password2.errors %}<ul class="error-list">
+                            <li>{{ err }}</li>
+                        </ul>{% endfor %}
+                    </div>
+
+                </div>
+                <button type="submit" class="btn-submit">Create Account &rarr;</button>
+            </form>
+
+            <div class="auth-footer" style="margin-top: 18px;">
+                Already have an account? <a href="{% url 'login' %}">Sign in here</a>
+            </div>
+        </div>
+    </div>
 </div>
+
+<script>
+    function togglePw(inputId, btn) {
+        var input = document.getElementById(inputId);
+        if (input.type === 'password') {
+            input.type = 'text';
+            btn.textContent = 'Hide';
+        } else {
+            input.type = 'password';
+            btn.textContent = 'Show';
+        }
+    }
+</script>
 {% endblock %}
