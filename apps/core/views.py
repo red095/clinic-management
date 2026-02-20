@@ -2,6 +2,10 @@ from django.shortcuts import render
 from django.views.generic import TemplateView
 from django.utils import timezone
 from .mixins import PatientRequiredMixin, DoctorRequiredMixin, AdminRequiredMixin
+from django.db.models import Count, F
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
 from apps.appointments.models import Appointment
 
 def home(request):

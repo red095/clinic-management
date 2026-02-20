@@ -5,4 +5,5 @@ urlpatterns = [
     path('', views.home, name='home'),
     path('patient-dashboard/', views.PatientDashboardView.as_view(), name='patient_dashboard'),
     path('doctor-dashboard/', views.DoctorDashboardView.as_view(), name='doctor_dashboard'),
+    path('admin-dashboard/', views.AdminDashboardView.as_view(), name='admin_dashboard'),
 ]

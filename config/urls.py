@@ -22,5 +22,6 @@ urlpatterns = [
     path('accounts/', include('apps.accounts.urls')),
     path('appointments/', include('apps.appointments.urls')),
     path('records/', include('apps.records.urls')),
+    # path('api/', include('apps.api.urls')),
     path('', include('apps.core.urls')),
 ]

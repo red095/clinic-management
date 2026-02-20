@@ -57,6 +57,13 @@ class Appointment(models.Model):
         ]
         ordering = ['-scheduled_time']
 
+    ALLOWED_TRANSITIONS = {
+        STATUS_PENDING: [STATUS_CONFIRMED, STATUS_CANCELLED],
+        STATUS_CONFIRMED: [STATUS_COMPLETED, STATUS_CANCELLED],
+        STATUS_COMPLETED: [],
+        STATUS_CANCELLED: []
+    }
+
     def __str__(self):
         return f"{self.patient} with {self.doctor} at {self.scheduled_time}"
 
@@ -97,6 +104,16 @@ class Appointment(models.Model):
              # If THIS appointment is also being set to CONFIRMED (or is already), it's a conflict
              if self.status == self.STATUS_CONFIRMED:
                  raise ValidationError("This doctor already has a confirmed appointment at this time.")
+
+    def transition_to(self, new_status):
+        """
+        Transitions the appointment to a new status if the transition is allowed.
+        """
+        if new_status not in self.ALLOWED_TRANSITIONS.get(self.status, []):
+            raise ValidationError(f"Invalid state transition from {self.status} to {new_status}")
+        
+        self.status = new_status
+        self.save()
 
     def can_be_cancelled(self):
         return self.status in [self.STATUS_PENDING, self.STATUS_CONFIRMED]

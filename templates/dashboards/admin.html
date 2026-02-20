@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <h2>Admin Dashboard</h2>
+    <p>Welcome, Admin!</p>
+
+    <!-- Key Metrics in Cards -->
+    <div style="display: flex; gap: 20px; flex-wrap: wrap; margin-top: 20px;">
+        <div style="flex: 1; min-width: 200px; padding: 20px; background-color: #e3f2fd; border-radius: 8px; text-align: center;">
+            <h3 style="margin: 0; color: #0d47a1;">{{ appointments_today }}</h3>
+            <p style="margin: 5px 0 0; color: #546e7a;">Appointments Today</p>
+        </div>
+        <div style="flex: 1; min-width: 200px; padding: 20px; background-color: #e8f5e9; border-radius: 8px; text-align: center;">
+            <h3 style="margin: 0; color: #1b5e20;">{{ total_patients }}</h3>
+            <p style="margin: 5px 0 0; color: #546e7a;">Total Patients</p>
+        </div>
+    </div>
+
+    <div style="display: flex; gap: 40px; margin-top: 40px; flex-wrap: wrap;">
+        <!-- Status Breakdown -->
+        <div style="flex: 1; min-width: 300px;">
+            <h3>Appointment Status Breakdown</h3>
+            <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+                <thead>
+                    <tr style="background-color: #f5f5f5; text-align: left;">
+                        <th style="padding: 10px;">Status</th>
+                        <th style="padding: 10px;">Count</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in status_breakdown %}
+                    <tr>
+                        <td style="padding: 10px; border-bottom: 1px solid #ddd;">{{ item.status }}</td>
+                        <td style="padding: 10px; border-bottom: 1px solid #ddd;">{{ item.count }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="2" style="padding: 10px;">No appointments data.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Doctor Workload -->
+        <div style="flex: 1; min-width: 300px;">
+            <h3>Top Doctors (Workload)</h3>
+            <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+                <thead>
+                    <tr style="background-color: #f5f5f5; text-align: left;">
+                        <th style="padding: 10px;">Doctor</th>
+                        <th style="padding: 10px;">Confirmed Appointments</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in doctor_workload %}
+                    <tr>
+                        <td style="padding: 10px; border-bottom: 1px solid #ddd;">Dr. {{ item.doctor_name }}</td>
+                        <td style="padding: 10px; border-bottom: 1px solid #ddd;">{{ item.count }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="2" style="padding: 10px;">No data available.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <div style="margin-top: 40px;">
+         <h3>System Actions</h3>
+         <a href="/admin/" style="display: inline-block; padding: 10px 20px; background-color: #333; color: white; text-decoration: none; border-radius: 4px;">Go to Django Admin Panel</a>
+    </div>
+
+    <form method="post" action="{% url 'logout' %}" style="margin-top: 50px;">
+        {% csrf_token %}
+        <button type="submit" style="width: auto; background-color: #d90429;">Logout</button>
+    </form>
+</div>
+{% endblock %}
